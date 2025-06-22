@@ -1,0 +1,24 @@
+{
+  "name": "fastify.js",
+  "version": "1.0.0",
+  "description": "This server app belongs to Fastify JS",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --env-file=.env server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/jitu38104/node_fastify"
+  },
+  "type": "module",
+  "author": "Jitender Kumar",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/mongodb": "^9.0.2",
+    "fastify": "^5.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
