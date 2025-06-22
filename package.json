@@ -15,8 +15,10 @@
   "author": "Jitender Kumar",
   "license": "ISC",
   "dependencies": {
+    "@fastify/jwt": "^9.1.0",
     "@fastify/mongodb": "^9.0.2",
-    "fastify": "^5.4.0"
+    "fastify": "^5.4.0",
+    "fastify-bcrypt": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

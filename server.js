@@ -1,11 +1,11 @@
 import Fastify from "fastify";
 import MongoDB from "@fastify/mongodb";
+import fastifyJWT from "@fastify/jwt";
+import fastifyBcrypt from "fastify-bcrypt";
 
 import userRouter from "./src/routes/user.js";
 
 const fastify = Fastify({logger: true});
-
-fastify.register(userRouter);
 
 fastify.register(MongoDB, {
     forceClose: true,
@@ -22,9 +22,19 @@ fastify.after(async () => {
     }
 });
 
+fastify.register(fastifyBcrypt, {
+    saltWorkFactor: 10
+});
+
+fastify.register(fastifyJWT, {
+    secret: process.env.SECRET
+});
+
 fastify.get("/", async(request, reply) => {
     return {message: "Welcome to Fastify APIs"};
 });
+
+fastify.register(userRouter);
 
 const startServer = async() => {
     try {

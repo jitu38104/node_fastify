@@ -1,25 +1,55 @@
+import { preHandlerFunc } from "../hooks/auth.js";
 import { studentRegisterSchema, studentUpdateSchema, studentFetchSchema } from "../schema/studentSchema.js";
 import { successResponse, serverErrorResponse } from "../utils/response.js";
 
 const API_PREFIX = "/api/student";
 
+const JWT_HANDLER = { preHandler: preHandlerFunc };
+
 const userRouter = (fastify, opts) => {
-    fastify.post(`${API_PREFIX}/register`, studentRegisterSchema, async(request, reply) => {
+    fastify.post(`${API_PREFIX}/register`, { ...JWT_HANDLER, ...studentRegisterSchema }, async(request, reply) => {
         try {
-            const {name, email, age, contact, address} = request.body;
+            const { name, email, age, contact, address } = request.body;
+            const password = await fastify.bcrypt.hash(request.body.password);
 
             const student = fastify.mongo.db.collection("students");
 
-            const result = await student.insertOne({name, email, age, contact, address});
+            const result = await student.insertOne({ name, email, age, contact, address, password });
 
             const returnResponse = successResponse(false, reply.statusCode, "user added!", {student_id: result.insertedId.toString()}); 
             return reply.code(201).send(returnResponse);
+        } catch (error) {
+            return reply.code(500).send(serverErrorResponse(reply.statusCode, error));
+        }
+    });
+
+    fastify.post(`${API_PREFIX}/login`, async(request, reply) => {
+        try {
+            const {username:email, password} = request.body;
+            const student = fastify.mongo.db.collection("students");
+
+            const result = await student.findOne({ email });
+
+            if(!result) {
+                return reply.code(401).send(successResponse(true, reply.statusCode, "UNAUTHORIZED USER", []));
+            } else {
+                const isMatched = await fastify.bcrypt.compare(password, result?.password);
+                
+                if(isMatched) {
+                    const token = fastify.jwt.sign({ email, password }, { expiresIn: "1d" });
+                    const returnResponse = successResponse(false, reply.statusCode, "LOGIN SUCCESS", [{...result, token}]);
+                    return reply.code(200).send(returnResponse);
+                } else {
+                    return reply.code(401).send(successResponse(true, reply.statusCode, "UNAUTHORIZED USER", []));
+                }
+            }
+
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));
         }
     });
 
-    fastify.get(`${API_PREFIX}/get/all`, studentFetchSchema, async(request, reply) => {
+    fastify.get(`${API_PREFIX}/get/all`, { ...JWT_HANDLER, ...studentFetchSchema }, async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
     
@@ -44,7 +74,7 @@ const userRouter = (fastify, opts) => {
     });
 
 
-    fastify.get(`${API_PREFIX}/get/:id`, studentFetchSchema, async(request, reply) => {
+    fastify.get(`${API_PREFIX}/get/:id`, { ...JWT_HANDLER, ...studentFetchSchema }, async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
@@ -64,12 +94,12 @@ const userRouter = (fastify, opts) => {
     });
 
 
-    fastify.get(`${API_PREFIX}/get-ids`, async(request, reply) => {
+    fastify.get(`${API_PREFIX}/get-ids`, { ...JWT_HANDLER }, async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
     
             const result = await student.find({}, {
-                projection: { _id: 1, name: 0, age: 0, email: 0, contact: 0, address: 0 }
+                projection: { _id: 1, name: 0, age: 0, email: 0, contact: 0, address: 0, password: 0 }
             }).toArray();
 
             return reply.code(200).send(successResponse(false, reply.statusCode, "SUCCESS", [result]));
@@ -79,7 +109,7 @@ const userRouter = (fastify, opts) => {
     });
 
 
-    fastify.put(`${API_PREFIX}/update/:id`, async(request, reply) => {
+    fastify.put(`${API_PREFIX}/update/:id`, { ...JWT_HANDLER, ...studentUpdateSchema },  async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
@@ -98,7 +128,7 @@ const userRouter = (fastify, opts) => {
     });
 
 
-    fastify.delete(`${API_PREFIX}/delete/:id`, async(request, reply) => {
+    fastify.delete(`${API_PREFIX}/delete/:id`, { ...JWT_HANDLER }, async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
