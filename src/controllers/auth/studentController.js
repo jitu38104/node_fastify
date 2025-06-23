@@ -1,13 +1,7 @@
-import { preHandlerFunc } from "../hooks/auth.js";
-import { studentRegisterSchema, studentUpdateSchema, studentFetchSchema } from "../schema/studentSchema.js";
-import { successResponse, serverErrorResponse } from "../utils/response.js";
+import { successResponse, serverErrorResponse } from "../../utils/response.js";
 
-const API_PREFIX = "/api/student";
-
-const JWT_HANDLER = { preHandler: preHandlerFunc };
-
-const userRouter = (fastify, opts) => {
-    fastify.post(`${API_PREFIX}/register`, { ...JWT_HANDLER, ...studentRegisterSchema }, async(request, reply) => {
+export const studentController = {
+    studentRegister: (fastify, opts) => async(request, reply) => {
         try {
             const { name, email, age, contact, address } = request.body;
             const password = await fastify.bcrypt.hash(request.body.password);
@@ -21,9 +15,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error));
         }
-    });
+    },
 
-    fastify.post(`${API_PREFIX}/login`, async(request, reply) => {
+    studentLogin: (fastify, opts) => async(request, reply) => {
         try {
             const {username:email, password} = request.body;
             const student = fastify.mongo.db.collection("students");
@@ -47,9 +41,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));
         }
-    });
+    },
 
-    fastify.get(`${API_PREFIX}/get/all`, { ...JWT_HANDLER, ...studentFetchSchema }, async(request, reply) => {
+    getAllStudents: (fastify, opts) => async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
     
@@ -71,10 +65,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));
         }
-    });
+    },
 
-
-    fastify.get(`${API_PREFIX}/get/:id`, { ...JWT_HANDLER, ...studentFetchSchema }, async(request, reply) => {
+    getStudentById: (fastify, opts) => async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
@@ -91,10 +84,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));
         }
-    });
+    },
 
-
-    fastify.get(`${API_PREFIX}/get-ids`, { ...JWT_HANDLER }, async(request, reply) => {
+    getAllStudentIds: (fastify, opts) => async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
     
@@ -106,10 +98,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));            
         }
-    });
+    },
 
-
-    fastify.put(`${API_PREFIX}/update/:id`, { ...JWT_HANDLER, ...studentUpdateSchema },  async(request, reply) => {
+    updateStudent: (fastify, opts) => async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
@@ -125,10 +116,9 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error));            
         }
-    });
+    },
 
-
-    fastify.delete(`${API_PREFIX}/delete/:id`, { ...JWT_HANDLER }, async(request, reply) => {
+    deleteStudent: (fastify, opts) => async(request, reply) => {
         try {
             const student = fastify.mongo.db.collection("students");
             const student_id = new fastify.mongo.ObjectId(request.params.id);
@@ -144,8 +134,5 @@ const userRouter = (fastify, opts) => {
         } catch (error) {
             return reply.code(500).send(serverErrorResponse(reply.statusCode, error.errorResponse.errmsg));            
         }
-    });
+    }
 };
-
-
-export default userRouter;

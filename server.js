@@ -3,7 +3,7 @@ import MongoDB from "@fastify/mongodb";
 import fastifyJWT from "@fastify/jwt";
 import fastifyBcrypt from "fastify-bcrypt";
 
-import userRouter from "./src/routes/user.js";
+import studentRouter from "./src/routes/student.js";
 
 const fastify = Fastify({logger: true});
 
@@ -34,12 +34,17 @@ fastify.get("/", async(request, reply) => {
     return {message: "Welcome to Fastify APIs"};
 });
 
-fastify.register(userRouter);
+fastify.register(studentRouter);
 
-const startServer = async() => {
+const startServer = () => {
     try {
         const PORT = process.env.PORT || 8800;
-        await fastify.listen({port: PORT});
+        fastify.listen({port: PORT}, (err, address) => {
+            if(!err) {
+                fastify.log.info("Server is running on port: "+PORT);
+                fastify.log.info(`Click here: http://localhost:${PORT}`);
+            }
+        });
     } catch (error) {
         fastify.log.error(error);
         process.exit(1);
